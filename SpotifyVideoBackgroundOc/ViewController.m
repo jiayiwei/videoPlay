@@ -13,7 +13,7 @@
 
 @interface ViewController ()
 {
-    
+    //ceshi
 }
 //播放器
 @property (nonatomic,strong)AVPlayer *player;

@@ -10,10 +10,11 @@
 #import <AVFoundation/AVFoundation.h>
 #import <MediaPlayer/MediaPlayer.h>
 #import <AVKit/AVKit.h>
-
+#import "BarrageView.h"
+#import "BarrageManager.h"
 @interface ViewController ()
 {
-    //ceshi
+    
 }
 //播放器
 @property (nonatomic,strong)AVPlayer *player;
@@ -52,7 +53,7 @@
     [self loadAVPlayer];
     [self createVideoBottomView];
     [self createVideoTopView];
-
+    [self createDanmuView];
 }
 //隐藏信号栏
 - (BOOL)prefersStatusBarHidden
@@ -90,7 +91,6 @@
     
     //add
     [self.playerBgView.layer addSublayer:playerlayer];
-    self.playerBgView.backgroundColor = [UIColor redColor];
     [self.view addSubview:self.playerBgView];
     
     //开始播放
@@ -190,7 +190,18 @@
     
 
 }
-
+//创建弹幕
+- (void)createDanmuView
+{
+    BarrageManager *manager = [[BarrageManager alloc] init];
+    __weak typeof(self) weakSelf = self;
+    manager.generateBarrageBlock = ^(BarrageView *view){
+        view.frame = CGRectMake(weakSelf.playerBgView.frame.size.width + 50, 20 + 34 * view.trajectory, CGRectGetWidth(view.bounds), CGRectGetHeight(view.bounds));
+        [weakSelf.view addSubview:view];
+        [view startAnimation];
+    };
+    [manager start];
+}
 
 //- (void)loadVideoController
 //{
@@ -273,7 +284,7 @@
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
     //如果点击的不是播放器，不做相应
-    if (![[touches.anyObject view] isEqual:self.player]) {
+    if (![[touches.anyObject view] isEqual:self.playerBgView]) {
         return;
     }
     //如果是多个手指不做处理
@@ -289,6 +300,9 @@
     }else{
         [self videoControlViewHide];
     }
+    
+    UITouch * touch = (UITouch *)touches.anyObject;
+    NSLog(@"touches.count=%zdtapCount==%zd",touches.count,touch.tapCount);
 }
 - (void)readyPlay
 {

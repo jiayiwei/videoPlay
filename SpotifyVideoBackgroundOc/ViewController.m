@@ -169,12 +169,17 @@
     self.totalTimeLable = totalLable;
     
     /*创建拖动进度条*/
-    UISlider *slider = [[UISlider alloc] initWithFrame:CGRectMake(0, 0, playerLayerRect.size.width, 2)];
+    UISlider *slider = [[UISlider alloc] initWithFrame:CGRectMake(0, -19.5, playerLayerRect.size.width, 40)];
     slider.minimumTrackTintColor = [UIColor greenColor];
     slider.maximumTrackTintColor = [UIColor clearColor];
-    [slider addTarget:self action:@selector(sliderClick:) forControlEvents:UIControlEventTouchUpInside];
+    [slider addTarget:self action:@selector(sliderTouchDown:) forControlEvents:UIControlEventTouchDown];
     [slider addTarget:self action:@selector(sliderVlaueChange:) forControlEvents:UIControlEventValueChanged];
+    [slider addTarget:self action:@selector(sliderTouchEnd:) forControlEvents:UIControlEventTouchUpInside];
+    [slider addTarget:self action:@selector(sliderTouchEnd:) forControlEvents:UIControlEventTouchUpOutside];
+    [slider addTarget:self action:@selector(sliderTouchEnd:) forControlEvents:UIControlEventTouchCancel];
+
     slider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [slider setThumbImage:[UIImage imageNamed:@"MoviePlayer_Slider"] forState:UIControlStateNormal];
     self.slider = slider;
 //    slider.backgroundColor = [];
     
@@ -239,20 +244,34 @@
 - (void)sliderVlaueChange:(UISlider *)sender
 {
     
-    self.playOrPauseBtn.selected = YES;
+     NSLog(@"改变");
     CMTime changeValue = CMTimeMakeWithSeconds(sender.value, 1);
 //    __weak typeof(self) weakSelf = self;
     [self.player seekToTime:changeValue completionHandler:^(BOOL finished) {
       
     }];
-}
-//点击Slider
-- (void)sliderClick:(UISlider *)sender
-{
-    NSLog(@"sliderClick%f",sender.value);
-    self.playOrPauseBtn.selected = NO;
+    
     
 }
+//slider触碰结束
+- (void)sliderTouchEnd:(UISlider *)sender
+{
+    NSLog(@"结束");
+    self.playOrPauseBtn.selected = NO;
+    [self.player play];
+    [self videoControlViewOutHide];
+    
+    
+}
+//slider开始点击
+- (void)sliderTouchDown:(UISlider *)sender
+{
+    NSLog(@"开始");
+    [self.timer invalidate];//开始点击slider 销毁定时器（取消隐藏播放器的控制view）
+    self.playOrPauseBtn.selected = YES;
+    [self.player pause];
+}
+//- (void)
 #pragma mark -
 #pragma mark - kvo 监听播放状态（视频播放的部分核心代码）
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context{
@@ -283,6 +302,12 @@
 //点击事件
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    
+    
+}
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    
     //如果点击的不是播放器，不做相应
     if (![[touches.anyObject view] isEqual:self.playerBgView]) {
         return;
@@ -292,16 +317,12 @@
     if (touches.count > 1 || [touch tapCount] > 1 || event.allTouches.count > 1) {
         return;
     }
-}
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
-{
     if (self.videoTopView.hidden) {
         [self videoControlViewOutHide];
     }else{
         [self videoControlViewHide];
     }
     
-    UITouch * touch = (UITouch *)touches.anyObject;
     NSLog(@"touches.count=%zdtapCount==%zd",touches.count,touch.tapCount);
 }
 - (void)readyPlay
@@ -382,7 +403,7 @@
     self.videoTopView.hidden = YES;
     [self.timer invalidate];
 }
-//视频控制view退出隐藏
+//视频控制view退出隐藏，重新开始
 - (void)videoControlViewOutHide
 {
     self.videoBottomView.hidden = NO;

@@ -13,7 +13,7 @@
 @property (nonatomic, strong) NSMutableArray *tmpComments;
 @property (nonatomic, strong) NSMutableArray *visibleBarrage;//当前屏幕中显示的弹幕
 
-@property BOOL Started;
+
 @property BOOL StopAnimation;
 
 @end
@@ -26,7 +26,6 @@
     if (self.tmpComments.count == 0) {
         [self.tmpComments addObjectsFromArray:self.allComments];
     }
-    self.Started = YES;
     self.StopAnimation = NO;
     [self initBarrageView];
 }

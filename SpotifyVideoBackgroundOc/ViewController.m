@@ -12,16 +12,23 @@
 #import <AVKit/AVKit.h>
 #import "BarrageView.h"
 #import "BarrageManager.h"
+typedef NS_ENUM (NSInteger,GestureType){
+    volumeGesture,
+    brightnessGesture,
+    videoMoveGesture,
+};
 @interface ViewController ()
 {
     
 }
+
 //播放器
 @property (nonatomic,strong)AVPlayer *player;
 @property (nonatomic,strong)AVPlayerItem *playerItem;
 //@property (nonatomic,strong)PlayerView *playerView;
 @property (nonatomic,strong)AVPlayerLayer *playerLayer;
 @property (nonatomic,strong)UIView *playerBgView;
+@property GestureType gesutreType;
 
 //播放器顶部和底部视图
 @property (nonatomic,strong)UIView *videoTopView;
@@ -31,6 +38,8 @@
 @property (nonatomic,strong)UILabel *totalTimeLable;//总得时间
 @property (nonatomic,strong)UISlider *slider;
 @property (nonatomic,strong)UIButton *playOrPauseBtn;
+@property (nonatomic,strong)UISlider *volumeSlider;//音量调节
+@property (nonatomic,strong)UISlider *brightnessSlider;//亮度调节
 
 //控制视频的控制view隐藏与显示
 @property (nonatomic,strong)NSTimer *timer;
@@ -54,6 +63,8 @@
     [self createVideoBottomView];
     [self createVideoTopView];
     [self createDanmuView];
+    [self configVulumSlider];
+ 
 }
 //隐藏信号栏
 - (BOOL)prefersStatusBarHidden
@@ -207,7 +218,28 @@
     };
     [manager start];
 }
-
+//获取系统音量slider
+- (void)configVulumSlider
+{
+    MPVolumeView *volume = [[MPVolumeView alloc] init];
+    volume.frame = CGRectMake(0, 0, 100, 100);
+    [self.playerBgView addSubview:volume];
+    for (UIView *view in [volume subviews]){
+        if ([view.class.description isEqualToString:@"MPVolumeSlider"]){
+            _volumeSlider = (UISlider *)view;
+            break;
+        }
+    }
+    // 使用这个category的应用不会随着手机静音键打开而静音，可在手机静音下播放声音
+    NSError *error = nil;
+    BOOL success = [[AVAudioSession sharedInstance] setCategory: AVAudioSessionCategoryPlayback error: &error];
+    
+    
+    if (!success) {/* error */}
+    
+    // 监听耳机插入和拔掉通知
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioRouteChangeListenerCallback:) name:AVAudioSessionRouteChangeNotification object:nil];
+}
 //- (void)loadVideoController
 //{
 //    NSURL *videoURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"moments" ofType:@"mp4"]];
@@ -324,6 +356,79 @@
     }
     
     NSLog(@"touches.count=%zdtapCount==%zd",touches.count,touch.tapCount);
+}
+- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    UITouch *touch = [touches anyObject];
+    CGPoint location = [touch locationInView:self.playerBgView];
+    CGPoint prevLocation = [touch previousLocationInView:self.playerBgView];
+  
+    
+    
+    //如果点击的不是播放器，不做相应
+    if (![[touches.anyObject view] isEqual:self.playerBgView]) {
+        return;
+    }
+    //左边音量
+    if (location.x >0 && location.x<= self.playerBgView.frame.size.width/2.f) {
+        _gesutreType = volumeGesture;
+    }
+    //右边亮度
+    if (location.x > self.playerBgView.frame.size.width/2.f) {
+        _gesutreType = brightnessGesture;
+    }
+    if (location.y - prevLocation.y > 0) {
+        _gesutreType = videoMoveGesture;
+    }else{
+        _gesutreType = videoMoveGesture;
+    }
+
+    [self gestureMove:location withPrevLocation:prevLocation];
+}
+
+- (void)gestureMove:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
+{
+    switch (_gesutreType) {
+        case volumeGesture://调节音量
+            [self volumeAdjust:location withPrevLocation:prevLocation];
+            break;
+        case brightnessGesture://调节亮度
+            [self brightness:location withPrevLocation:prevLocation];
+            break;
+        case videoMoveGesture://视频快进/后退
+            [self videoMoveAdjust:location withPrevLocation:prevLocation];
+            break;
+        default:
+            break;
+    }
+  
+   
+}
+
+- (void)volumeAdjust:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
+{
+    if (location.x - prevLocation.x > 0) {
+        //finger touch went right
+    } else {
+        //finger touch went left
+    }
+    
+}
+- (void)brightness:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
+{
+    if (location.x - prevLocation.x > 0) {
+        //finger touch went right
+    } else {
+        //finger touch went left
+    }
+}
+- (void)videoMoveAdjust:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
+{
+    if (location.y - prevLocation.y > 0) {
+        //finger touch went upwards
+    } else {
+        //finger touch went downwards
+    }
 }
 - (void)readyPlay
 {
@@ -455,26 +560,33 @@
     }
     return _playerBgView;
 }
-/*如果你想一进入该控制器的时候就强制旋转，可以设置下面的属性，跟上面的可以根据需求来定义*/
-//#pragma mark- 设置横盘与状态栏
-//- (BOOL)prefersStatusBarHidden{
-//    return YES;
-//}
-////允许横屏旋转
-//- (BOOL)shouldAutorotate
-//{
-//    return self.isAutororate;
-//}
-////支持左右旋转
-//- (UIInterfaceOrientationMask)supportedInterfaceOrientations
-//{
-//    return UIInterfaceOrientationMaskLandscapeRight|UIInterfaceOrientationMaskLandscapeLeft;
-//}
-////默认右旋转
-//- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation
-//{
-//    return UIInterfaceOrientationLandscapeRight;
-//}
+
+/// 耳机插入、拔出事件
+- (void)audioRouteChangeListenerCallback:(NSNotification*)notification
+{
+    NSInteger routeChangeReason = [[notification.userInfo valueForKey:AVAudioSessionRouteChangeReasonKey] integerValue];
+    switch (routeChangeReason) {
+        case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+            NSLog(@"---耳机插入");
+            break;
+            
+        case AVAudioSessionRouteChangeReasonOldDeviceUnavailable: {
+            NSLog(@"---耳机拔出");
+            
+        }
+            break;
+            
+        case AVAudioSessionRouteChangeReasonCategoryChange:
+            // called at start - also when other audio wants to play
+            NSLog(@"AVAudioSessionRouteChangeReasonCategoryChange");
+            break;
+            
+        default:
+            break;
+    }
+}
+
+
 
 #pragma mark -
 #pragma mark -other
@@ -530,5 +642,27 @@
 {
     //移除播放倒计时服务
     [self.player removeTimeObserver:self.timeServer];
+    [self removeObserver:self forKeyPath:AVAudioSessionRouteChangeNotification];
 }
+
+/*如果你想一进入该控制器的时候就强制旋转，可以设置下面的属性，跟上面的可以根据需求来定义*/
+//#pragma mark- 设置横盘与状态栏
+//- (BOOL)prefersStatusBarHidden{
+//    return YES;
+//}
+////允许横屏旋转
+//- (BOOL)shouldAutorotate
+//{
+//    return self.isAutororate;
+//}
+////支持左右旋转
+//- (UIInterfaceOrientationMask)supportedInterfaceOrientations
+//{
+//    return UIInterfaceOrientationMaskLandscapeRight|UIInterfaceOrientationMaskLandscapeLeft;
+//}
+////默认右旋转
+//- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation
+//{
+//    return UIInterfaceOrientationLandscapeRight;
+//}
 @end

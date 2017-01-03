@@ -13,9 +13,9 @@
 #import "BarrageView.h"
 #import "BarrageManager.h"
 typedef NS_ENUM (NSInteger,GestureType){
-    volumeGesture,
-    brightnessGesture,
+    videoVolumeOrbrightnessGesture,
     videoMoveGesture,
+    videoNoneGesture,
 };
 @interface ViewController ()
 {
@@ -25,19 +25,18 @@ typedef NS_ENUM (NSInteger,GestureType){
 //播放器
 @property (nonatomic,strong)AVPlayer *player;
 @property (nonatomic,strong)AVPlayerItem *playerItem;
-//@property (nonatomic,strong)PlayerView *playerView;
 @property (nonatomic,strong)AVPlayerLayer *playerLayer;
 @property (nonatomic,strong)UIView *playerBgView;
 @property GestureType gesutreType;
 
 //播放器顶部和底部视图
-@property (nonatomic,strong)UIView *videoTopView;
-@property (nonatomic,strong)UIView *videoBottomView;
+@property (nonatomic,strong)UIView *videoTopView;//视频底部控制条
+@property (nonatomic,strong)UIView *videoBottomView;//视频顶部控制条
 @property (nonatomic,strong)UIProgressView *progressView;//缓存进度条
 @property (nonatomic,strong)UILabel *timeLabel;//播放时间
 @property (nonatomic,strong)UILabel *totalTimeLable;//总得时间
-@property (nonatomic,strong)UISlider *slider;
-@property (nonatomic,strong)UIButton *playOrPauseBtn;
+@property (nonatomic,strong)UISlider *slider;//调节视频播放进度
+@property (nonatomic,strong)UIButton *playOrPauseBtn;//开始、暂停
 @property (nonatomic,strong)UISlider *volumeSlider;//音量调节
 @property (nonatomic,strong)UISlider *brightnessSlider;//亮度调节
 
@@ -45,9 +44,10 @@ typedef NS_ENUM (NSInteger,GestureType){
 @property (nonatomic,strong)NSTimer *timer;
 
 //变量
-@property (nonatomic,assign)long long totalSeconds;
-@property (nonatomic,assign)BOOL isAutororate;
-@property (nonatomic,strong)id timeServer;
+@property (nonatomic,assign)long long totalSeconds;//视频总得时间
+@property (nonatomic,strong)id timeServer;//定时器服务
+@property (nonatomic,assign)CGPoint startPonint;//手势的起始点
+@property (nonatomic,assign)CGFloat startVB;//记录手指触摸时的音量和亮度的初始值（v:volume b:Brightness）
 @end
 #define ScreenWidth [UIScreen mainScreen].bounds.size.width
 #define ScreenHeight [UIScreen mainScreen].bounds.size.height
@@ -64,6 +64,7 @@ typedef NS_ENUM (NSInteger,GestureType){
     [self createVideoTopView];
     [self createDanmuView];
     [self configVulumSlider];
+    self.gesutreType = videoNoneGesture;
  
 }
 //隐藏信号栏
@@ -192,7 +193,6 @@ typedef NS_ENUM (NSInteger,GestureType){
     slider.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [slider setThumbImage:[UIImage imageNamed:@"MoviePlayer_Slider"] forState:UIControlStateNormal];
     self.slider = slider;
-//    slider.backgroundColor = [];
     
     [self.playerBgView addSubview:self.videoBottomView];
     [self.videoBottomView addSubview:pauseOrPlay];
@@ -240,19 +240,8 @@ typedef NS_ENUM (NSInteger,GestureType){
     // 监听耳机插入和拔掉通知
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioRouteChangeListenerCallback:) name:AVAudioSessionRouteChangeNotification object:nil];
 }
-//- (void)loadVideoController
-//{
-//    NSURL *videoURL = [NSURL fileURLWithPath:[[NSBundle mainBundle] pathForResource:@"moments" ofType:@"mp4"]];
-//    AVPlayer *player = [AVPlayer playerWithURL:videoURL];
-//    AVPlayerViewController *playerViewController = [AVPlayerViewController new];
-//    playerViewController.player = player;
-//    playerViewController.view.frame = CGRectMake(0, 0,ScreenWidth, ScreenHeight);
-//    playerViewController.showsPlaybackControls = NO;
-//    [self.view addSubview:playerViewController.view];
-//    [playerViewController.player play];
-//    
-//}
-#pragma mark -action
+#pragma mark -
+#pragma mark - action
 - (void)backAction
 {
     
@@ -292,8 +281,6 @@ typedef NS_ENUM (NSInteger,GestureType){
     self.playOrPauseBtn.selected = NO;
     [self.player play];
     [self videoControlViewOutHide];
-    
-    
 }
 //slider开始点击
 - (void)sliderTouchDown:(UISlider *)sender
@@ -305,7 +292,7 @@ typedef NS_ENUM (NSInteger,GestureType){
 }
 //- (void)
 #pragma mark -
-#pragma mark - kvo 监听播放状态（视频播放的部分核心代码）
+#pragma mark - kvo 监听播放状态
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context{
     if ([keyPath isEqualToString:@"status"]) {    //获取到视频信息的状态, 成功就可以进行播放, 失败代表加载失败
         if (self.playerItem.status == AVPlayerItemStatusReadyToPlay) {//准备好播放
@@ -314,9 +301,8 @@ typedef NS_ENUM (NSInteger,GestureType){
             NSLog(@"视频播放失败");
         }else if(self.playerItem.status == AVPlayerItemStatusUnknown){//未知错误
         }
-    
     }else if([keyPath isEqualToString:@"loadedTimeRanges"]){//当缓冲进度有变化的时候
-//        NSLog(@"loadedTimeRanges");
+        NSLog(@"loadedTimeRanges");
         [self setProgressVlaue];
         
     }else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"]){//当视频播放因为各种状态播放停止的时候, 这个属性会发生变化
@@ -331,76 +317,132 @@ typedef NS_ENUM (NSInteger,GestureType){
         
     }
 }
-//点击事件
+#pragma mark -
+#pragma mark - 手势触摸 （控制音量、亮度、和快进的逻辑）
+//开始触摸
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
-    
-    
-}
-- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
-{
-    
+    UITouch *touch = [touches anyObject];
+
     //如果点击的不是播放器，不做相应
     if (![[touches.anyObject view] isEqual:self.playerBgView]) {
         return;
     }
     //如果是多个手指不做处理
-    UITouch * touch = (UITouch *)touches.anyObject;
     if (touches.count > 1 || [touch tapCount] > 1 || event.allTouches.count > 1) {
         return;
     }
+    CGPoint currentPoint = [touch locationInView:self.playerBgView];
+    
+    //记录首次触摸的坐标
+    self.startPonint = currentPoint;
+    if (self.startPonint.x <= self.playerBgView.frame.size.width/2.f) {//左边音量
+        self.startVB = self.volumeSlider.value;
+    }else{//右边亮度
+        self.startVB = [UIScreen mainScreen].brightness;
+    }
+    
+}
+//触摸结束
+- (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    UITouch * touch = (UITouch *)touches.anyObject;
+
+    //如果点击的不是播放器，不做相应
+    if (![[touches.anyObject view] isEqual:self.playerBgView]) {
+        return;
+    }
+    //如果是多个手指不做处理
+    if (touches.count > 1 || [touch tapCount] > 1 || event.allTouches.count > 1) {
+        return;
+    }
+    
+    //控制播放器顶部和底部控制条的隐藏与显示
     if (self.videoTopView.hidden) {
         [self videoControlViewOutHide];
     }else{
         [self videoControlViewHide];
     }
+    self.gesutreType = videoNoneGesture;
     
     NSLog(@"touches.count=%zdtapCount==%zd",touches.count,touch.tapCount);
 }
+//拖动
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
     UITouch *touch = [touches anyObject];
-    CGPoint location = [touch locationInView:self.playerBgView];
-    CGPoint prevLocation = [touch previousLocationInView:self.playerBgView];
-  
-    
-    
     //如果点击的不是播放器，不做相应
     if (![[touches.anyObject view] isEqual:self.playerBgView]) {
         return;
     }
-    //左边音量
-    if (location.x >0 && location.x<= self.playerBgView.frame.size.width/2.f) {
-        _gesutreType = volumeGesture;
+    //如果是多个手指不做处理
+    if (touches.count > 1 || [touch tapCount] > 1 || event.allTouches.count > 1) {
+        return;
     }
-    //右边亮度
-    if (location.x > self.playerBgView.frame.size.width/2.f) {
-        _gesutreType = brightnessGesture;
+    
+    CGPoint location = [touch locationInView:self.playerBgView];
+    CGPoint distancePoint = CGPointMake(location.x - self.startPonint.x, location.y - self.startPonint.y);
+    //判断用户滑动的方向
+    if (self.gesutreType == videoNoneGesture) {
+        if (fabs(distancePoint.x) >= 30) {//30是最小移动距离（自己随便定义）
+            //进度
+            self.gesutreType = videoMoveGesture;
+        }else if (fabs(distancePoint.y) >= 30){
+            //音量和亮度
+            self.gesutreType = videoVolumeOrbrightnessGesture;
+        }
     }
-    if (location.y - prevLocation.y > 0) {
-        _gesutreType = videoMoveGesture;
-    }else{
-        _gesutreType = videoMoveGesture;
+    switch (self.gesutreType) {
+        case videoMoveGesture://调节播放进度
+            
+            break;
+        case videoVolumeOrbrightnessGesture://调节音量或者亮度
+            if (self.startPonint.x <= self.playerBgView.frame.size.width / 2.0) {//左边调节音量
+                
+                if (distancePoint.y < 0) {
+                    //增大音量
+                    [self.volumeSlider setValue:self.startVB + (-distancePoint.y / 30.0 / 10) animated:YES];
+                    if (self.startVB + (-distancePoint.y / 30 / 10) - self.volumeSlider.value >= 0.1) {
+                        [self.volumeSlider setValue:0.1 animated:NO];
+                        [self.volumeSlider setValue:self.startVB + (-distancePoint.y / 30.0 / 10) animated:YES];
+                    }
+                    
+                } else {
+                    //减少音量
+                    [self.volumeSlider setValue:self.startVB - (distancePoint.y / 30.0 / 10) animated:YES];
+                }
+                
+            }else{//右边调节亮度
+                if (distancePoint.y < 0) {
+                    //增加亮度
+                    [[UIScreen mainScreen] setBrightness:self.startVB + (-distancePoint.y / 30.0 / 10)];
+                } else {
+                    //减少亮度
+                    [[UIScreen mainScreen] setBrightness:self.startVB - (distancePoint.y / 30.0 / 10)];
+                }
+            }
+            break;
+            
+        default:
+            break;
     }
-
-    [self gestureMove:location withPrevLocation:prevLocation];
 }
 
 - (void)gestureMove:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
 {
-    switch (_gesutreType) {
-        case volumeGesture://调节音量
-            [self volumeAdjust:location withPrevLocation:prevLocation];
-            break;
-        case brightnessGesture://调节亮度
-            [self brightness:location withPrevLocation:prevLocation];
-            break;
-        case videoMoveGesture://视频快进/后退
-            [self videoMoveAdjust:location withPrevLocation:prevLocation];
-            break;
-        default:
-            break;
-    }
+//    switch (_gesutreType) {
+//        case volumeGesture://调节音量
+//            [self volumeAdjust:location withPrevLocation:prevLocation];
+//            break;
+//        case brightnessGesture://调节亮度
+//            [self brightness:location withPrevLocation:prevLocation];
+//            break;
+//        case videoMoveGesture://视频快进/后退
+//            [self videoMoveAdjust:location withPrevLocation:prevLocation];
+//            break;
+//        default:
+//            break;
+//    }
   
    
 }
@@ -452,7 +494,6 @@ typedef NS_ENUM (NSInteger,GestureType){
 //设置播放时间 和剩余时间
 - (void)setPlayTimeAndTotalTime
 {
-//    self.timeLabel
     self.totalTimeLable.text = [self calculateTimeWithTimeFormatter:self.totalSeconds];
     //这个方法相当于倒计时，使用完后要注意移除。关于CMTimeMake的介绍:
     //https://zwo28.wordpress.com/2015/03/06/%E8%A7%86%E9%A2%91%E5%90%88%E6%88%90%E4%B8%ADcmtime%E7%9A%84%E7%90%86%E8%A7%A3%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%88%A9%E7%94%A8cmtime%E5%AE%9E%E7%8E%B0%E8%BF%87%E6%B8%A1%E6%95%88%E6%9E%9C/
@@ -490,16 +531,6 @@ typedef NS_ENUM (NSInteger,GestureType){
     self.videoBottomView.frame = CGRectMake(0, self.playerBgView.frame.size.height - videoBootomViewH, self.playerBgView.frame.size.width, videoBootomViewH);
     [UIView setAnimationDuration:0.5];
     [UIView commitAnimations];
-
-    
-    
-    
-    
-    
-}
-- (void)delayHideVideoControlView
-{
-    [self performSelector:@selector(videoControlViewHide) withObject:nil afterDelay:5];
 }
 //视频控制view隐藏
 - (void)videoControlViewHide
@@ -524,7 +555,8 @@ typedef NS_ENUM (NSInteger,GestureType){
     }
     
 }
-#pragma mark - 懒加载
+#pragma mark -
+#pragma mark - getter/setter
 - (UIView *)videoTopView
 {
     if (!_videoTopView) {
@@ -589,7 +621,7 @@ typedef NS_ENUM (NSInteger,GestureType){
 
 
 #pragma mark -
-#pragma mark -other
+#pragma mark - other
 
 //获取视频的缩略图
 - (UIImage *)getImageVideo:(NSString *)videoUrl

@@ -19,6 +19,8 @@
 		E9FF3EE71E017C1500D8A137 /* hot_btnPlay_n@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E9FF3EE61E017C1500D8A137 /* hot_btnPlay_n@3x.png */; };
 		E9FF3EE91E017EC200D8A137 /* play_full_p@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E9FF3EE81E017EC200D8A137 /* play_full_p@3x.png */; };
 		E9FF3EEB1E01889C00D8A137 /* playermini_back@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = E9FF3EEA1E01889C00D8A137 /* playermini_back@3x.png */; };
+		E9FF3EF81E1BD30100D8A137 /* BarrageManager.m in Sources */ = {isa = PBXBuildFile; fileRef = E9FF3EF51E1BD30100D8A137 /* BarrageManager.m */; };
+		E9FF3EF91E1BD30100D8A137 /* BarrageView.m in Sources */ = {isa = PBXBuildFile; fileRef = E9FF3EF71E1BD30100D8A137 /* BarrageView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +61,10 @@
 		E9FF3EE61E017C1500D8A137 /* hot_btnPlay_n@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "hot_btnPlay_n@3x.png"; sourceTree = "<group>"; };
 		E9FF3EE81E017EC200D8A137 /* play_full_p@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "play_full_p@3x.png"; sourceTree = "<group>"; };
 		E9FF3EEA1E01889C00D8A137 /* playermini_back@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "playermini_back@3x.png"; sourceTree = "<group>"; };
+		E9FF3EF41E1BD30100D8A137 /* BarrageManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BarrageManager.h; sourceTree = "<group>"; };
+		E9FF3EF51E1BD30100D8A137 /* BarrageManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BarrageManager.m; sourceTree = "<group>"; };
+		E9FF3EF61E1BD30100D8A137 /* BarrageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BarrageView.h; sourceTree = "<group>"; };
+		E9FF3EF71E1BD30100D8A137 /* BarrageView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BarrageView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +115,7 @@
 		E9FF3EAB1DF066E600D8A137 /* SpotifyVideoBackgroundOc */ = {
 			isa = PBXGroup;
 			children = (
+				E9FF3EF31E1BD30100D8A137 /* barrage */,
 				E9FF3EEA1E01889C00D8A137 /* playermini_back@3x.png */,
 				E9FF3EE81E017EC200D8A137 /* play_full_p@3x.png */,
 				E9FF3EE61E017C1500D8A137 /* hot_btnPlay_n@3x.png */,
@@ -150,6 +157,17 @@
 				E9FF3ED31DF066E600D8A137 /* Info.plist */,
 			);
 			path = SpotifyVideoBackgroundOcUITests;
+			sourceTree = "<group>";
+		};
+		E9FF3EF31E1BD30100D8A137 /* barrage */ = {
+			isa = PBXGroup;
+			children = (
+				E9FF3EF41E1BD30100D8A137 /* BarrageManager.h */,
+				E9FF3EF51E1BD30100D8A137 /* BarrageManager.m */,
+				E9FF3EF61E1BD30100D8A137 /* BarrageView.h */,
+				E9FF3EF71E1BD30100D8A137 /* BarrageView.m */,
+			);
+			path = barrage;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -289,8 +307,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E9FF3EF91E1BD30100D8A137 /* BarrageView.m in Sources */,
 				E9FF3EB41DF066E600D8A137 /* ViewController.m in Sources */,
 				E9FF3EB11DF066E600D8A137 /* AppDelegate.m in Sources */,
+				E9FF3EF81E1BD30100D8A137 /* BarrageManager.m in Sources */,
 				E9FF3EAE1DF066E600D8A137 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

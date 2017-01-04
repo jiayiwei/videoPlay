@@ -12,6 +12,7 @@
 #import <AVKit/AVKit.h>
 #import "BarrageView.h"
 #import "BarrageManager.h"
+#import "BrightnessCustomView.h"
 typedef NS_ENUM (NSInteger,GestureType){
     videoVolumeOrbrightnessGesture,
     videoMoveGesture,
@@ -38,7 +39,8 @@ typedef NS_ENUM (NSInteger,GestureType){
 @property (nonatomic,strong)UISlider *slider;//调节视频播放进度
 @property (nonatomic,strong)UIButton *playOrPauseBtn;//开始、暂停
 @property (nonatomic,strong)UISlider *volumeSlider;//音量调节
-@property (nonatomic,strong)UISlider *brightnessSlider;//亮度调节
+@property (nonatomic,strong)BrightnessCustomView *brightnessView;//亮度调节
+@property (nonatomic,assign)CGFloat startSliderValue;
 
 //控制视频的控制view隐藏与显示
 @property (nonatomic,strong)NSTimer *timer;
@@ -48,22 +50,25 @@ typedef NS_ENUM (NSInteger,GestureType){
 @property (nonatomic,strong)id timeServer;//定时器服务
 @property (nonatomic,assign)CGPoint startPonint;//手势的起始点
 @property (nonatomic,assign)CGFloat startVB;//记录手指触摸时的音量和亮度的初始值（v:volume b:Brightness）
+@property (nonatomic,assign)BOOL isMove;
 @end
 #define ScreenWidth [UIScreen mainScreen].bounds.size.width
 #define ScreenHeight [UIScreen mainScreen].bounds.size.height
-#define videoBootomViewH 40.f
+#define videoBootomViewH 50.f
 @implementation ViewController
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-
+    self.isMove = NO;
     /*创建播放器*/
     [self loadAVPlayer];
     [self createVideoBottomView];
     [self createVideoTopView];
     [self createDanmuView];
     [self configVulumSlider];
+    self.brightnessView.center = self.playerBgView.center;
+    [self.playerBgView addSubview:self.brightnessView];
     self.gesutreType = videoNoneGesture;
  
 }
@@ -115,8 +120,8 @@ typedef NS_ENUM (NSInteger,GestureType){
 //创建视图顶部控制条
 - (void)createVideoTopView
 {
-    CGRect playerLayerRect = self.playerLayer.frame;
-    self.videoTopView.frame = CGRectMake(0, 0, playerLayerRect.size.width, 50);
+    
+    self.videoTopView.frame = CGRectMake(0, 0, 50, 50);
     
     UIButton *back = [UIButton buttonWithType:UIButtonTypeCustom];
     back.frame = CGRectMake(15, 10, 30, 30);
@@ -222,8 +227,7 @@ typedef NS_ENUM (NSInteger,GestureType){
 - (void)configVulumSlider
 {
     MPVolumeView *volume = [[MPVolumeView alloc] init];
-    volume.frame = CGRectMake(0, 0, 100, 100);
-    [self.playerBgView addSubview:volume];
+    [volume sizeToFit];
     for (UIView *view in [volume subviews]){
         if ([view.class.description isEqualToString:@"MPVolumeSlider"]){
             _volumeSlider = (UISlider *)view;
@@ -341,6 +345,9 @@ typedef NS_ENUM (NSInteger,GestureType){
     }else{//右边亮度
         self.startVB = [UIScreen mainScreen].brightness;
     }
+    self.startSliderValue = self.slider.value;//手势开始时播放进度
+    self.isMove = NO;//记录用户是否是滑动
+   
     
 }
 //触摸结束
@@ -358,18 +365,27 @@ typedef NS_ENUM (NSInteger,GestureType){
     }
     
     //控制播放器顶部和底部控制条的隐藏与显示
-    if (self.videoTopView.hidden) {
-        [self videoControlViewOutHide];
-    }else{
-        [self videoControlViewHide];
+    if (self.isMove == NO) {
+        if (self.videoTopView.hidden) {
+            [self videoControlViewOutHide];
+        }else{
+            [self videoControlViewHide];
+        }
+        
     }
-    self.gesutreType = videoNoneGesture;
     
-    NSLog(@"touches.count=%zdtapCount==%zd",touches.count,touch.tapCount);
+    [self.player play];
+    self.gesutreType = videoNoneGesture;
+
 }
 //拖动
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
 {
+    if (self.timer.isValid) {
+        [self.timer invalidate];
+    }
+    [self.player pause];
+    
     UITouch *touch = [touches anyObject];
     //如果点击的不是播放器，不做相应
     if (![[touches.anyObject view] isEqual:self.playerBgView]) {
@@ -379,7 +395,7 @@ typedef NS_ENUM (NSInteger,GestureType){
     if (touches.count > 1 || [touch tapCount] > 1 || event.allTouches.count > 1) {
         return;
     }
-    
+    self.isMove = YES;
     CGPoint location = [touch locationInView:self.playerBgView];
     CGPoint distancePoint = CGPointMake(location.x - self.startPonint.x, location.y - self.startPonint.y);
     //判断用户滑动的方向
@@ -394,6 +410,15 @@ typedef NS_ENUM (NSInteger,GestureType){
     }
     switch (self.gesutreType) {
         case videoMoveGesture://调节播放进度
+        {
+            CGFloat rate = self.startSliderValue+ distancePoint.x / 30;
+            rate = rate > self.totalSeconds ? self.totalSeconds : rate;
+            rate = rate < 0 ? 0 : rate;
+            NSLog(@"rate=%f",rate);
+            [self.slider setValue:rate animated:YES];
+            [self sliderVlaueChange:self.slider];
+        }
+            
             
             break;
         case videoVolumeOrbrightnessGesture://调节音量或者亮度
@@ -427,51 +452,7 @@ typedef NS_ENUM (NSInteger,GestureType){
             break;
     }
 }
-
-- (void)gestureMove:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
-{
-//    switch (_gesutreType) {
-//        case volumeGesture://调节音量
-//            [self volumeAdjust:location withPrevLocation:prevLocation];
-//            break;
-//        case brightnessGesture://调节亮度
-//            [self brightness:location withPrevLocation:prevLocation];
-//            break;
-//        case videoMoveGesture://视频快进/后退
-//            [self videoMoveAdjust:location withPrevLocation:prevLocation];
-//            break;
-//        default:
-//            break;
-//    }
-  
-   
-}
-
-- (void)volumeAdjust:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
-{
-    if (location.x - prevLocation.x > 0) {
-        //finger touch went right
-    } else {
-        //finger touch went left
-    }
-    
-}
-- (void)brightness:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
-{
-    if (location.x - prevLocation.x > 0) {
-        //finger touch went right
-    } else {
-        //finger touch went left
-    }
-}
-- (void)videoMoveAdjust:(CGPoint)location withPrevLocation:(CGPoint)prevLocation
-{
-    if (location.y - prevLocation.y > 0) {
-        //finger touch went upwards
-    } else {
-        //finger touch went downwards
-    }
-}
+//准备播放
 - (void)readyPlay
 {
     //设置播放时间
@@ -592,7 +573,14 @@ typedef NS_ENUM (NSInteger,GestureType){
     }
     return _playerBgView;
 }
-
+- (BrightnessCustomView *)brightnessView
+{
+    if (!_brightnessView) {
+        _brightnessView = [[BrightnessCustomView alloc] initWithFrame:CGRectMake(0, 0, kVideoBrightnessIndicatorViewSide, kVideoBrightnessIndicatorViewSide)];
+        
+    }
+    return _brightnessView;
+}
 /// 耳机插入、拔出事件
 - (void)audioRouteChangeListenerCallback:(NSNotification*)notification
 {

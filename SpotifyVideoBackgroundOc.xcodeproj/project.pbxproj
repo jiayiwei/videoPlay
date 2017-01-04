@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		19EA3EA11E1CA08200CDC2EC /* BrightnessCustomView.m in Sources */ = {isa = PBXBuildFile; fileRef = 19EA3EA01E1CA08200CDC2EC /* BrightnessCustomView.m */; };
 		E9FF3EAE1DF066E600D8A137 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = E9FF3EAD1DF066E600D8A137 /* main.m */; };
 		E9FF3EB11DF066E600D8A137 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E9FF3EB01DF066E600D8A137 /* AppDelegate.m */; };
 		E9FF3EB41DF066E600D8A137 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = E9FF3EB31DF066E600D8A137 /* ViewController.m */; };
@@ -41,6 +42,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		19EA3E9F1E1CA08200CDC2EC /* BrightnessCustomView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BrightnessCustomView.h; sourceTree = "<group>"; };
+		19EA3EA01E1CA08200CDC2EC /* BrightnessCustomView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BrightnessCustomView.m; sourceTree = "<group>"; };
 		E9FF3EA91DF066E600D8A137 /* SpotifyVideoBackgroundOc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpotifyVideoBackgroundOc.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E9FF3EAD1DF066E600D8A137 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		E9FF3EAF1DF066E600D8A137 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -92,6 +95,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		19EA3E9E1E1CA05D00CDC2EC /* 自定义亮度view */ = {
+			isa = PBXGroup;
+			children = (
+				19EA3E9F1E1CA08200CDC2EC /* BrightnessCustomView.h */,
+				19EA3EA01E1CA08200CDC2EC /* BrightnessCustomView.m */,
+			);
+			path = "自定义亮度view";
+			sourceTree = "<group>";
+		};
 		E9FF3EA01DF066E600D8A137 = {
 			isa = PBXGroup;
 			children = (
@@ -115,6 +127,7 @@
 		E9FF3EAB1DF066E600D8A137 /* SpotifyVideoBackgroundOc */ = {
 			isa = PBXGroup;
 			children = (
+				19EA3E9E1E1CA05D00CDC2EC /* 自定义亮度view */,
 				E9FF3EF31E1BD30100D8A137 /* barrage */,
 				E9FF3EEA1E01889C00D8A137 /* playermini_back@3x.png */,
 				E9FF3EE81E017EC200D8A137 /* play_full_p@3x.png */,
@@ -237,7 +250,7 @@
 				TargetAttributes = {
 					E9FF3EA81DF066E600D8A137 = {
 						CreatedOnToolsVersion = 7.2;
-						DevelopmentTeam = 384JR72VW3;
+						DevelopmentTeam = 9N5AYA5Q97;
 					};
 					E9FF3EC11DF066E600D8A137 = {
 						CreatedOnToolsVersion = 7.2;
@@ -311,6 +324,7 @@
 				E9FF3EB41DF066E600D8A137 /* ViewController.m in Sources */,
 				E9FF3EB11DF066E600D8A137 /* AppDelegate.m in Sources */,
 				E9FF3EF81E1BD30100D8A137 /* BarrageManager.m in Sources */,
+				19EA3EA11E1CA08200CDC2EC /* BrightnessCustomView.m in Sources */,
 				E9FF3EAE1DF066E600D8A137 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -452,6 +466,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 9N5AYA5Q97;
 				INFOPLIST_FILE = SpotifyVideoBackgroundOc/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ja.SpotifyVideoBackgroundOc;
@@ -463,6 +478,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 9N5AYA5Q97;
 				INFOPLIST_FILE = SpotifyVideoBackgroundOc/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = ja.SpotifyVideoBackgroundOc;

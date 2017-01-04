@@ -2,7 +2,7 @@
 //  BarrageView.h
 //  弹幕demo
 //
-//  Created by z on 2016/12/28.
+//  Created by ja on 2016/12/28.
 //  Copyright © 2016年 ja. All rights reserved.
 //
 

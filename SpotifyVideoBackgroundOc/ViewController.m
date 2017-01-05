@@ -50,7 +50,8 @@ typedef NS_ENUM (NSInteger,GestureType){
 @property (nonatomic,strong)id timeServer;//定时器服务
 @property (nonatomic,assign)CGPoint startPonint;//手势的起始点
 @property (nonatomic,assign)CGFloat startVB;//记录手指触摸时的音量和亮度的初始值（v:volume b:Brightness）
-@property (nonatomic,assign)BOOL isMove;
+@property (nonatomic,assign)BOOL isMove;//是否在移动
+@property (nonatomic,assign)BOOL isPlaying;//是否正在播放
 @end
 #define ScreenWidth [UIScreen mainScreen].bounds.size.width
 #define ScreenHeight [UIScreen mainScreen].bounds.size.height
@@ -111,7 +112,7 @@ typedef NS_ENUM (NSInteger,GestureType){
     [self.view addSubview:self.playerBgView];
     
     //开始播放
-    [self.player play];
+    [self play];
     self.timer=[NSTimer scheduledTimerWithTimeInterval:5 target:self selector:@selector(videoControlViewHide) userInfo:nil repeats:YES];
 
     
@@ -255,9 +256,9 @@ typedef NS_ENUM (NSInteger,GestureType){
 {
     sender.selected = !sender.selected;
     if (sender.selected) {
-        [self.player pause];
+        [self pause];
     }else {
-        [self.player play];
+        [self play];
     }
 }
 //视频旋转
@@ -283,7 +284,7 @@ typedef NS_ENUM (NSInteger,GestureType){
 {
     NSLog(@"结束");
     self.playOrPauseBtn.selected = NO;
-    [self.player play];
+    [self play];
     [self videoControlViewOutHide];
 }
 //slider开始点击
@@ -292,7 +293,7 @@ typedef NS_ENUM (NSInteger,GestureType){
     NSLog(@"开始");
     [self.timer invalidate];//开始点击slider 销毁定时器（取消隐藏播放器的控制view）
     self.playOrPauseBtn.selected = YES;
-    [self.player pause];
+    [self pause];
 }
 //- (void)
 #pragma mark -
@@ -372,9 +373,13 @@ typedef NS_ENUM (NSInteger,GestureType){
             [self videoControlViewHide];
         }
         
+    }else{
+        [self videoControlViewOutHide];
     }
     
-    [self.player play];
+    [self play];
+    
+    
     self.gesutreType = videoNoneGesture;
 
 }
@@ -384,7 +389,10 @@ typedef NS_ENUM (NSInteger,GestureType){
     if (self.timer.isValid) {
         [self.timer invalidate];
     }
-    [self.player pause];
+    if (self.isPlaying) {
+        [self pause];
+    }
+    
     
     UITouch *touch = [touches anyObject];
     //如果点击的不是播放器，不做相应
@@ -459,8 +467,18 @@ typedef NS_ENUM (NSInteger,GestureType){
     [self setPlayTimeAndTotalTime];
     self.slider.minimumValue = .0;
     self.slider.maximumValue = self.totalSeconds;
-    
    
+}
+//暂停
+- (void)pause{
+    self.isPlaying = YES;
+    [self.player pause];
+    
+}
+//播放
+- (void)play{
+    self.isPlaying = NO;
+    [self.player play];
 }
 //设置缓存进度 progress
 - (void)setProgressVlaue
@@ -491,12 +509,14 @@ typedef NS_ENUM (NSInteger,GestureType){
     
     sender.selected = !sender.selected;
     
+    //向右边旋转全屏
     Float64 rotation =M_PI_2;//设置旋转角度，向右旋转90°
     CGFloat height  = ScreenWidth;//向右边旋转后手机的宽度变成视频视图的高度
-    CGFloat width = ScreenHeight;
-    CGFloat playerW = ScreenHeight;
-    CGFloat playerH = ScreenWidth;
+    CGFloat width = ScreenHeight;//向右边旋转后手机的高度变成视频视图的宽度
+    CGFloat playerW = ScreenHeight;//同理
+    CGFloat playerH = ScreenWidth;//同理
     
+    //向左边旋转小屏
     if (!sender.selected) {
         rotation = 0;//向左旋转90°
         height = ScreenHeight;
